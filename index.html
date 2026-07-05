@@ -3,365 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Storyboard & Prompt Generator v3</title>
+    <title>Visionary AI - Prompt Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .file-input-wrapper:hover .file-input-icon { color: #2563eb; transform: scale(1.1); }
-        .file-input-icon { transition: all 0.3s ease; }
+        /* Custom scrollbar for timeline */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen py-8 px-4 md:px-8">
-    
-    <div class="max-w-5xl mx-auto bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200">
+<body class="bg-gray-900 text-white font-sans antialiased p-6">
+
+    <div class="max-w-6xl mx-auto space-y-8">
+        
         <!-- Header -->
-        <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-10 text-white relative overflow-hidden">
-            <div class="relative z-10">
-                <h1 class="text-4xl font-extrabold tracking-tight mb-2">Pro AI Video Storyboard <span class="text-blue-400">v3</span></h1>
-                <p class="text-slate-300 text-lg max-w-2xl">Otomatisasi pembuatan prompt sinematik 15 detik dengan dukungan referensi multi-media, judul segmen, dan lokalisasi bahasa.</p>
-            </div>
-            <div class="absolute top-0 right-0 opacity-10 pointer-events-none text-9xl">
-                <i class="fas fa-film"></i>
-            </div>
-        </div>
+        <header class="text-center space-y-2">
+            <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Visionary AI Prompt Builder</h1>
+            <p class="text-gray-400">Ubah Referensi Video Menjadi Prompt AI yang Unik & Sinematik</p>
+        </header>
 
-        <div class="p-10 space-y-10">
-            <!-- Section 1: Media Uploads -->
-            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                <h2 class="text-xl font-bold text-slate-800 mb-4"><i class="fas fa-cloud-upload-alt mr-2 text-blue-600"></i>1. Masukkan Referensi Media</h2>
-                
-                <div class="grid md:grid-cols-3 gap-6">
-                    <!-- Photo Upload -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-slate-700">Upload Foto (Maks 4)</label>
-                        <div class="relative file-input-wrapper cursor-pointer border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-blue-500 bg-white transition">
-                            <input type="file" accept="image/*" multiple id="photoUpload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileCount('photoUpload', 'photoCount', 4)">
-                            <i class="fas fa-images text-2xl text-slate-400 file-input-icon mb-2"></i>
-                            <p class="text-xs text-slate-500" id="photoCount">Klik atau Drag 4 foto ke sini</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Video Upload -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-slate-700">Upload Video (Maks 1)</label>
-                        <div class="relative file-input-wrapper cursor-pointer border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-blue-500 bg-white transition">
-                            <input type="file" accept="video/*" id="videoUpload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileCount('videoUpload', 'videoCount', 1)">
-                            <i class="fas fa-video text-2xl text-slate-400 file-input-icon mb-2"></i>
-                            <p class="text-xs text-slate-500" id="videoCount">Klik atau Drag 1 video ke sini</p>
-                        </div>
-                    </div>
-
-                    <!-- YouTube Link -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-slate-700">Link YouTube</label>
-                        <div class="relative h-full">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fab fa-youtube text-red-500 text-lg"></i>
-                            </div>
-                            <input type="url" id="ytLink" placeholder="https://youtube.com/watch?v=..." class="w-full h-full pl-10 p-3 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
-                        </div>
-                    </div>
-                </div>
+        <!-- Section 1: Input Media -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Upload Area -->
+            <div class="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center hover:border-blue-500 transition cursor-pointer flex flex-col items-center justify-center bg-gray-800">
+                <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                <p class="text-lg font-semibold">Tarik & Lepas Video di Sini</p>
+                <p class="text-sm text-gray-500 mt-1">Mendukung MP4, MOV (Max 50MB)</p>
+                <button class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition">Atau Pilih File</button>
             </div>
 
-            <!-- Section 2: Prompt Details -->
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-2">Subjek / Ide Utama (Deskripsi Referensi):</label>
-                        <textarea id="refInput" class="w-full p-4 border border-slate-300 rounded-2xl bg-white focus:ring-2 focus:ring-blue-500 outline-none transition" rows="4" placeholder="Contoh: A beautifully styled molten chocolate lava cake being prepared on a dark walnut wooden table..."></textarea>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-2">Gaya Visual (Style):</label>
-                        <select id="styleInput" class="w-full p-4 border border-slate-300 rounded-2xl bg-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                            <option value="Futuristic">Futuristic / Cyberpunk</option>
-                            <option value="Ghibli">Anime Studio Ghibli</option>
-                            <option value="Oil">Classic Oil Painting</option>
-                            <option value="Doc">Cinematic Documentary</option>
-                            <option value="Macro">Ultra-Realistic Macro (Food/Product)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-2">Bahasa Prompt (Output):</label>
-                        <select id="langInput" class="w-full p-4 border border-slate-300 rounded-2xl bg-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                            <option value="en">English (Direkomendasikan untuk AI)</option>
-                            <option value="id">Bahasa Indonesia</option>
-                        </select>
-                    </div>
+            <!-- YouTube URL Area -->
+            <div class="bg-gray-800 rounded-xl p-8 flex flex-col justify-center border border-gray-700">
+                <h3 class="text-lg font-semibold mb-4">Import dari YouTube</h3>
+                <div class="flex space-x-2">
+                    <input type="text" placeholder="https://www.youtube.com/watch?v=..." class="flex-1 bg-gray-900 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500">
+                    <button onclick="generateStoryboard()" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition whitespace-nowrap">Tarik Video</button>
                 </div>
             </div>
+        </section>
 
-            <button onclick="generateStoryboard()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-5 rounded-2xl transition-all shadow-lg transform active:scale-[0.99] flex justify-center items-center gap-2 text-lg">
-                <i class="fas fa-magic"></i> Generate 15s Storyboard
-            </button>
-
-            <div id="resultSection" class="hidden space-y-8 mt-10 border-t border-slate-200 pt-10">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-black text-slate-800">15-Second Storyboard Breakdown</h2>
-                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">5 Segmen x 3 Detik</span>
-                </div>
-                
-                <div id="segments" class="space-y-6"></div>
-                
-                <button onclick="copyAll()" class="w-full bg-slate-900 text-white font-semibold py-4 rounded-xl hover:bg-black transition flex justify-center items-center gap-2 shadow-md">
-                    <i class="fas fa-copy"></i> Copy Full Script
+        <!-- Section 2: Style Selector -->
+        <section class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <h3 class="text-lg font-semibold mb-4">Pilih Gaya Visual (Style Configuration)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="style-selector">
+                <button class="style-btn active border-2 border-purple-500 bg-gray-900 rounded-lg p-4 text-center transition" onclick="selectStyle(this)">
+                    <span class="text-2xl block mb-2">🚀</span>
+                    <span class="font-medium">Futuristik</span>
+                </button>
+                <button class="style-btn border-2 border-gray-600 hover:border-gray-400 bg-gray-900 rounded-lg p-4 text-center transition" onclick="selectStyle(this)">
+                    <span class="text-2xl block mb-2">🍃</span>
+                    <span class="font-medium">Anime Ghibli</span>
+                </button>
+                <button class="style-btn border-2 border-gray-600 hover:border-gray-400 bg-gray-900 rounded-lg p-4 text-center transition" onclick="selectStyle(this)">
+                    <span class="text-2xl block mb-2">🎨</span>
+                    <span class="font-medium">Lukisan Klasik</span>
+                </button>
+                <button class="style-btn border-2 border-gray-600 hover:border-gray-400 bg-gray-900 rounded-lg p-4 text-center transition" onclick="selectStyle(this)">
+                    <span class="text-2xl block mb-2">🎥</span>
+                    <span class="font-medium">Documenter</span>
                 </button>
             </div>
-        </div>
+        </section>
+
+        <!-- Section 3: Timeline & Storyboard (Hidden by default until video is processed) -->
+        <section id="storyboard-section" class="hidden space-y-6">
+            <div class="flex items-center justify-between border-b border-gray-700 pb-2">
+                <h2 class="text-2xl font-bold text-blue-400">Smart Clipper & Storyboard</h2>
+                <button class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition">Copy Semua Prompt</button>
+            </div>
+
+            <!-- Segment 1 -->
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 flex flex-col md:flex-row gap-6">
+                <div class="md:w-1/4">
+                    <div class="w-full h-32 bg-gray-700 rounded-lg flex items-center justify-center mb-2">
+                        <span class="text-gray-500 text-sm">[Thumbnail 0-2s]</span>
+                    </div>
+                    <span class="bg-gray-900 text-blue-400 px-3 py-1 rounded-full text-xs font-bold">0:00 - 0:02</span>
+                </div>
+                <div class="md:w-3/4 flex flex-col">
+                    <label class="text-sm text-gray-400 mb-2 font-semibold">Generated Prompt (Mobil Sports):</label>
+                    <textarea class="w-full h-full min-h-[120px] bg-gray-900 text-gray-200 border border-gray-600 rounded-lg p-4 text-sm focus:outline-none focus:border-blue-500 resize-none" readonly>Ultra-Realistic Cinematic ASMR Commercial. Photorealistic, Hyper-realistic textures, 8K quality, Luxury commercial, Professional styling, Editorial product photography, Cinematic masterpiece, Commercial advertisement quality. Macro close-up of a precision screwdriver tightening a polished metal screw into the detailed chassis of a sleek diecast sports car. Sharp focus on the metallic threads and mechanical parts. Dramatic studio lighting. No music. No dialogue. No narration. No voice-over. No text overlay. No subtitles. No captions. No logo. No watermark. No branding. No face visible.</textarea>
+                    <button class="self-end mt-3 text-sm text-blue-400 hover:text-blue-300">📋 Copy Prompt Ini</button>
+                </div>
+            </div>
+
+            <!-- Segment 2 -->
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 flex flex-col md:flex-row gap-6">
+                <div class="md:w-1/4">
+                    <div class="w-full h-32 bg-gray-700 rounded-lg flex items-center justify-center mb-2">
+                        <span class="text-gray-500 text-sm">[Thumbnail 3-4s]</span>
+                    </div>
+                    <span class="bg-gray-900 text-blue-400 px-3 py-1 rounded-full text-xs font-bold">0:03 - 0:04</span>
+                </div>
+                <div class="md:w-3/4 flex flex-col">
+                    <label class="text-sm text-gray-400 mb-2 font-semibold">Generated Prompt (Kereta Api):</label>
+                    <textarea class="w-full h-full min-h-[120px] bg-gray-900 text-gray-200 border border-gray-600 rounded-lg p-4 text-sm focus:outline-none focus:border-blue-500 resize-none" readonly>Ultra-Realistic Cinematic ASMR Commercial. Photorealistic, Hyper-realistic textures, 8K quality, Luxury commercial, Professional styling, Editorial product photography, Cinematic masterpiece, Commercial advertisement quality. Extreme close-up of heavy, vintage metal model train wheels being gently lowered and perfectly locking onto miniature steel railway tracks. Deep shadows and warm rim lighting emphasizing the heavy iron textures. No music. No dialogue. No narration. No voice-over. No text overlay. No subtitles. No captions. No logo. No watermark. No branding. No face visible.</textarea>
+                    <button class="self-end mt-3 text-sm text-blue-400 hover:text-blue-300">📋 Copy Prompt Ini</button>
+                </div>
+            </div>
+            
+            <!-- You can add more segments here following the same structure -->
+            
+        </section>
     </div>
 
-    <!-- Custom Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded-xl shadow-2xl transform transition-all duration-300 translate-y-20 opacity-0 flex items-center gap-3 z-50">
-        <i class="fas fa-check-circle text-xl"></i>
-        <span class="font-medium" id="toastMessage">Berhasil disalin!</span>
-    </div>
-
+    <!-- JavaScript for interactivity -->
     <script>
-        // Common suffix to ensure high quality
-        const suffixes = {
-            en: "Film using premium cinema gear, shallow depth of field, creamy cinematic bokeh, smooth realism, photorealistic, 8K quality, cinematic masterpiece. No music, no text, no branding, no watermarks.",
-            id: "Direkam menggunakan peralatan bioskop premium, depth of field dangkal, bokeh sinematik yang lembut, realisme halus, fotorealistis, kualitas 8K, mahakarya sinematik. Tanpa musik, tanpa teks, tanpa merek, tanpa tanda air."
-        };
-
-        // Data for 15s segments (5 segments of 3 seconds each)
-        const storyboardData = {
-            Futuristic: {
-                titles: {
-                    en: ["The Awakening", "System Boot", "Environment Reveal", "The Action/Hero Shot", "The Fade/Outro"],
-                    id: ["Kebangkitan", "Sistem Aktif", "Pengungkapan Lingkungan", "Aksi / Tembakan Pahlawan", "Penutup"]
-                },
-                en: {
-                    "0-3s": "Extreme close-up macro shot of {subject} activating. Intricate mechanical details waking up. Neon blue and violet lighting casting deep shadows. High-tech cold aesthetic.",
-                    "4-6s": "Slow dolly zoom out revealing the interface surrounding {subject}. Holographic data streams flowing in the air. Soft volumetric light, sparks of electricity.",
-                    "7-9s": "Mid-shot establishing the cyberpunk context around {subject}. Rain-streaked window reflections, intense cinematic atmosphere. Motion blur, high contrast.",
-                    "10-12s": "Dynamic sweeping tracking shot of {subject} in full motion. Glowing neon signs in the background, wet pavement reflections, epic scale.",
-                    "13-15s": "Static wide-angle silhouette shot of {subject} settling down against a giant neon city horizon. Cinematic lens flare, atmospheric fog settling."
-                },
-                id: {
-                    "0-3s": "Bidikan makro jarak dekat ekstrem dari {subject} yang mulai aktif. Detail mekanis rumit mulai bergerak. Pencahayaan neon biru dan ungu menciptakan bayangan dalam. Estetika dingin berteknologi tinggi.",
-                    "4-6s": "Dolly zoom perlahan mundur mengungkapkan antarmuka di sekitar {subject}. Aliran data holografik mengambang di udara. Cahaya volumetrik lembut, percikan listrik.",
-                    "7-9s": "Bidikan menengah yang membangun konteks cyberpunk di sekitar {subject}. Pantulan jendela yang terkena hujan, atmosfer sinematik yang intens. Blur gerakan, kontras tinggi.",
-                    "10-12s": "Bidikan pelacakan dinamis yang menyapu dari {subject} dalam gerakan penuh. Papan tanda neon bercahaya di latar belakang, pantulan trotoar basah, skala epik.",
-                    "13-15s": "Bidikan siluet sudut lebar statis dari {subject} yang menetap di depan cakrawala kota neon raksasa. Suar lensa sinematik, kabut atmosferik mulai turun."
-                }
-            },
-            Ghibli: {
-                titles: {
-                    en: ["Peaceful Detail", "Gentle Movement", "Cozy Context", "Vibrant Magic", "Tranquil Ending"],
-                    id: ["Detail Damai", "Gerakan Lembut", "Konteks Nyaman", "Keajaiban Cerah", "Akhir Tenang"]
-                },
-                en: {
-                    "0-3s": "Macro shot of morning dew dropping near {subject}. Soft, painterly sunlight filtering through branches. Studio Ghibli art style, watercolor textures, vibrant greens.",
-                    "4-6s": "Gentle hand-drawn movement of wind interacting with {subject}. Soft clouds moving slowly in the background, nostalgia-inducing, hand-painted aesthetic.",
-                    "7-9s": "Mid-shot of {subject} in a cozy, rustic setting. Warm golden light, steam rising gently, hand-drawn textures, peaceful and whimsical mood.",
-                    "10-12s": "Slow panning wide shot of {subject} amidst a quaint blooming environment. Bright colors, soft shadows, Studio Ghibli masterwork, magical anime landscape.",
-                    "13-15s": "Wide shot of a golden sunset casting long shadows over {subject}. Tranquil, heartwarming mood, rich painterly detail, fading into dusk."
-                },
-                id: {
-                    "0-3s": "Bidikan makro embun pagi yang jatuh di dekat {subject}. Sinar matahari yang lembut dan seperti lukisan menyaring melalui cabang-cabang. Gaya seni Studio Ghibli, tekstur cat air, warna hijau cerah.",
-                    "4-6s": "Gerakan angin yang digambar tangan dengan lembut berinteraksi dengan {subject}. Awan lembut bergerak perlahan di latar belakang, memicu nostalgia, estetika lukisan tangan.",
-                    "7-9s": "Bidikan menengah {subject} dalam suasana pedesaan yang nyaman. Cahaya keemasan yang hangat, uap naik dengan lembut, tekstur yang digambar tangan, suasana damai dan aneh.",
-                    "10-12s": "Bidikan sudut lebar bergeser perlahan dari {subject} di tengah lingkungan yang mekar. Warna-warna cerah, bayangan lembut, mahakarya Studio Ghibli, lanskap anime ajaib.",
-                    "13-15s": "Bidikan lebar matahari terbenam keemasan yang memberikan bayangan panjang pada {subject}. Suasana tenang, menghangatkan hati, detail lukisan yang kaya, memudar menjadi senja."
-                }
-            },
-            Macro: {
-                titles: {
-                    en: ["The Ingredients", "The Process", "The Reveal", "The Hero Shot", "The Final Touch"],
-                    id: ["Bahan-Bahan", "Proses", "Pengungkapan", "Tembakan Utama", "Sentuhan Akhir"]
-                },
-                en: {
-                    "0-3s": "Ultra-close macro shot of the core elements of {subject} arranged beautifully on a dark walnut table. Highlighting glossy textures, crystal-like details, and raw ingredients.",
-                    "4-6s": "Satisfying macro detail of {subject} in preparation. Slow, elegant natural movements. Mixing, melting, or shifting textures. Creamy cinematic bokeh.",
-                    "7-9s": "Dramatic close-up as {subject} takes its final form. Soft steam rising or particles floating. Editorial styling, volumetric lighting, HDR quality.",
-                    "10-12s": "The hero moment: extreme slow-motion action of {subject} (e.g., slicing, pouring, or breaking open) revealing a rich, detailed center flowing naturally.",
-                    "13-15s": "Slow push-in on the final plated {subject} as finishing touches (powder, garnish, or light) gently fall over it. Professional commercial advertisement quality."
-                },
-                id: {
-                    "0-3s": "Bidikan makro sangat dekat dari elemen inti {subject} yang disusun dengan indah di atas meja kenari gelap. Menyoroti tekstur mengkilap, detail seperti kristal, dan bahan mentah.",
-                    "4-6s": "Detail makro yang memuaskan dari {subject} dalam persiapan. Gerakan alami yang lambat dan elegan. Mencampur, meleleh, atau mengubah tekstur. Bokeh sinematik yang lembut.",
-                    "7-9s": "Bidikan jarak dekat dramatis saat {subject} mengambil bentuk akhirnya. Uap lembut naik atau partikel mengambang. Penataan editorial, pencahayaan volumetrik, kualitas HDR.",
-                    "10-12s": "Momen utama: aksi gerak sangat lambat dari {subject} (misalnya: mengiris, menuangkan, atau membuka) mengungkapkan bagian tengah yang kaya dan detail yang mengalir secara alami.",
-                    "13-15s": "Kamera perlahan mendekat pada hasil akhir {subject} saat sentuhan akhir (bubuk, hiasan, atau cahaya) jatuh dengan lembut di atasnya. Kualitas iklan komersial profesional."
-                }
-            },
-            Oil: {
-                titles: {
-                    en: ["Impasto Details", "Chiaroscuro", "The Composition", "Emotional Climax", "Museum Display"],
-                    id: ["Detail Impasto", "Chiaroscuro", "Komposisi", "Klimaks Emosional", "Tampilan Museum"]
-                },
-                en: {
-                    "0-3s": "Extreme close-up macro of oil paint shaping {subject} on canvas with a palette knife. Visible heavy impasto textures, deep rich colors, Rembrandt lighting.",
-                    "4-6s": "Dramatic chiaroscuro lighting falling on {subject}. Soft focus on the texture of paint and light reflections, museum-quality aesthetic.",
-                    "7-9s": "Mid-shot revealing the environment around {subject}. Soft, moody ambiance, rich shadows, classic artistic composition coming alive.",
-                    "10-12s": "Wide shot featuring {subject} amidst dramatic, expressive brushstrokes moving actively in the frame. High contrast, emotional and moody artistic masterpiece.",
-                    "13-15s": "Final locked-off composition of {subject} with soft sunlight hitting the artwork. Balanced composition, warm palette, frozen museum-quality masterpiece."
-                },
-                id: {
-                    "0-3s": "Makro sangat dekat dari cat minyak yang membentuk {subject} di atas kanvas dengan pisau palet. Tekstur impasto tebal yang terlihat, warna kaya yang dalam, pencahayaan Rembrandt.",
-                    "4-6s": "Pencahayaan chiaroscuro dramatis jatuh pada {subject}. Fokus lembut pada tekstur cat dan pantulan cahaya, estetika kualitas museum.",
-                    "7-9s": "Bidikan menengah mengungkapkan lingkungan di sekitar {subject}. Suasana lembut dan murung, bayangan kaya, komposisi artistik klasik yang menjadi hidup.",
-                    "10-12s": "Bidikan lebar menampilkan {subject} di tengah sapuan kuas yang dramatis dan ekspresif yang bergerak aktif dalam bingkai. Kontras tinggi, mahakarya artistik yang emosional dan murung.",
-                    "13-15s": "Komposisi akhir statis dari {subject} dengan sinar matahari lembut mengenai karya seni. Komposisi seimbang, palet hangat, mahakarya kualitas museum yang membeku."
-                }
-            },
-            Doc: {
-                titles: {
-                    en: ["The Intimate Glance", "Observational Reality", "The Journey", "The Encounter", "The Grand Finale"],
-                    id: ["Pandangan Intim", "Realitas Observasional", "Perjalanan", "Pertemuan", "Puncak Acara"]
-                },
-                en: {
-                    "0-3s": "Handheld cinematic documentary shot, extreme close-up of {subject}. Realistic textures, natural lighting, 35mm film grain, authentic raw feel.",
-                    "4-6s": "Wide-angle observational shot of {subject} in its natural chaotic environment. Shallow depth of field, subtle camera shake, realistic textures.",
-                    "7-9s": "Low angle tracking shot of {subject} moving through the setting. Soft ambient light, film grain, realistic motion blur, observational storytelling.",
-                    "10-12s": "Extreme macro establishing the tactile interaction of {subject}. High contrast, warm natural lighting, deep storytelling, intense focus.",
-                    "13-15s": "Cinematic wide drone shot pulling away from {subject} into a soft-focus landscape. Golden hour light, highly detailed, realistic atmosphere."
-                },
-                id: {
-                    "0-3s": "Bidikan dokumenter sinematik genggam, jarak dekat ekstrem dari {subject}. Tekstur realistis, pencahayaan alami, butiran film 35mm, nuansa mentah yang otentik.",
-                    "4-6s": "Bidikan observasional sudut lebar dari {subject} di lingkungan alaminya yang kacau. Depth of field dangkal, guncangan kamera yang halus, tekstur realistis.",
-                    "7-9s": "Bidikan pelacakan sudut rendah dari {subject} yang bergerak melalui pengaturan. Cahaya sekitar yang lembut, butiran film, blur gerakan yang realistis, penceritaan observasional.",
-                    "10-12s": "Makro ekstrem yang menetapkan interaksi taktil dari {subject}. Kontras tinggi, pencahayaan alami yang hangat, penceritaan yang mendalam, fokus yang intens.",
-                    "13-15s": "Bidikan drone lebar sinematik yang menjauh dari {subject} ke lanskap fokus lembut. Cahaya keemasan (golden hour), sangat detail, suasana realistis."
-                }
-            }
-        };
-
-        const timelines = ["0-3s", "4-6s", "7-9s", "10-12s", "13-15s"];
-
-        function updateFileCount(inputId, textId, maxFiles) {
-            const input = document.getElementById(inputId);
-            const textElement = document.getElementById(textId);
-            const count = input.files.length;
-            
-            if (count > maxFiles) {
-                showToast(`Maksimal ${maxFiles} file!`, true);
-                input.value = '';
-                textElement.innerText = `Klik atau Drag ${maxFiles} file ke sini`;
-                return;
-            }
-
-            if (count > 0) {
-                textElement.innerHTML = `<span class="text-blue-600 font-bold">${count} file terpilih</span>`;
-            } else {
-                textElement.innerText = `Klik atau Drag file ke sini`;
-            }
+        // Function to handle style button selection
+        function selectStyle(clickedBtn) {
+            const buttons = document.querySelectorAll('.style-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('border-purple-500');
+                btn.classList.add('border-gray-600', 'hover:border-gray-400');
+            });
+            clickedBtn.classList.remove('border-gray-600', 'hover:border-gray-400');
+            clickedBtn.classList.add('border-purple-500');
         }
 
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            const msgEl = document.getElementById('toastMessage');
-            const icon = toast.querySelector('i');
-            
-            msgEl.innerText = message;
-            
-            if (isError) {
-                toast.classList.replace('bg-green-600', 'bg-red-600');
-                icon.className = 'fas fa-exclamation-circle text-xl';
-            } else {
-                toast.classList.replace('bg-red-600', 'bg-green-600');
-                icon.className = 'fas fa-check-circle text-xl';
-            }
-
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-
+        // Function to simulate video fetching and generating storyboard
         function generateStoryboard() {
-            let subject = document.getElementById('refInput').value.trim();
-            const style = document.getElementById('styleInput').value;
-            const lang = document.getElementById('langInput').value;
-            const segmentsContainer = document.getElementById('segments');
-            const resultSection = document.getElementById('resultSection');
+            const btn = event.target;
+            const originalText = btn.innerText;
+            
+            // Loading state
+            btn.innerText = "Memproses...";
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
 
-            // Default fallback if subject is empty
-            if (!subject) {
-                subject = lang === 'en' ? "the main subject" : "subjek utama";
-            }
-
-            segmentsContainer.innerHTML = '';
-            resultSection.classList.remove('hidden');
-
-            const styleData = storyboardData[style];
-            const suffix = suffixes[lang];
-            const content = styleData[lang];
-            const titles = styleData.titles[lang];
-
-            timelines.forEach((time, index) => {
-                // Replace placeholder {subject} with actual user input
-                const basePrompt = content[time].replace(/\{subject\}/g, subject);
-                const finalPrompt = `${basePrompt} ${suffix}`;
-                const title = titles[index];
+            // Simulate API call delay (2 seconds)
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
                 
-                const div = document.createElement('div');
-                div.className = "bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group";
+                // Show the storyboard section
+                const storyboard = document.getElementById('storyboard-section');
+                storyboard.classList.remove('hidden');
                 
-                div.innerHTML = `
-                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 group-hover:w-2 transition-all"></div>
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pl-3">
-                        <div class="flex items-center gap-3">
-                            <span class="bg-slate-900 text-white px-4 py-1.5 rounded-full text-sm font-bold tracking-widest shadow-sm">${time}</span>
-                            <h3 class="font-bold text-slate-800 text-lg">${title}</h3>
-                        </div>
-                        <button onclick="copySingle(this)" class="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
-                            <i class="far fa-copy"></i> Copy Segment
-                        </button>
-                    </div>
-                    <div class="pl-3">
-                        <p class="text-slate-700 font-mono text-sm md:text-base leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 segment-text">${finalPrompt}</p>
-                    </div>
-                `;
-                segmentsContainer.appendChild(div);
-            });
-
-            // Scroll to results smoothly
-            resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        function copySingle(buttonElement) {
-            const container = buttonElement.closest('div.group');
-            const textToCopy = container.querySelector('.segment-text').innerText;
-            executeCopy(textToCopy, "Segmen berhasil disalin!");
-        }
-
-        function copyAll() {
-            const segments = document.querySelectorAll('.segment-text');
-            if(segments.length === 0) return;
-            
-            let fullText = "";
-            segments.forEach((s, i) => {
-                fullText += `--- SEGMENT ${i+1} (${timelines[i]}) ---\n`;
-                fullText += s.innerText + "\n\n";
-            });
-            executeCopy(fullText, "Seluruh storyboard berhasil disalin!");
-        }
-
-        function executeCopy(text, successMessage) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.position = "fixed";
-            textArea.style.left = "-999999px";
-            document.body.appendChild(textArea);
-            textArea.select();
-            
-            try {
-                document.execCommand("copy");
-                showToast(successMessage);
-            } catch (err) {
-                showToast("Gagal menyalin teks", true);
-            }
-            
-            document.body.removeChild(textArea);
+                // Scroll down to storyboard
+                storyboard.scrollIntoView({ behavior: 'smooth' });
+            }, 2000);
         }
     </script>
 </body>

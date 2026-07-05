@@ -111,8 +111,47 @@
         </section>
     </div>
 
+    
+
     <!-- JavaScript for interactivity -->
     <script>
+//fetch
+
+        async function generateStoryboard() {
+    const btn = event.target;
+    btn.innerText = "Memproses...";
+    
+    try {
+        // Mengirim permintaan ke Backend Python
+        const formData = new FormData();
+        formData.append("youtube_url", "https://youtube.com/contoh");
+        formData.append("style_preference", "futuristik"); // Bisa diubah secara dinamis
+
+        const response = await fetch("https://backend-visionary.vercel.app/api/process-video", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+        
+        // Tampilkan hasil dari backend ke layar (Console Log sebagai bukti jalan)
+        console.log("Prompt berhasil dibuat oleh Backend:", data);
+        
+        // Membuka blok UI
+        document.getElementById('storyboard-section').classList.remove('hidden');
+        btn.innerText = "Tarik Video";
+        
+    } catch (error) {
+        console.error("Gagal terhubung ke backend:", error);
+        btn.innerText = "Gagal. Coba Lagi.";
+    }
+}
+
+
+
+
+
+        //gdgdgdgd
         // Function to handle style button selection
         function selectStyle(clickedBtn) {
             const buttons = document.querySelectorAll('.style-btn');

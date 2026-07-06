@@ -1,17 +1,16 @@
 export default async function handler(req, res) {
-    // Mengizinkan akses dari frontend (CORS)
+    // Pengaturan Header CORS agar bisa diakses browser
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
     if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+        return res.status(200).end();
     }
 
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Metode tidak diizinkan' });
+        return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
     const { prompt } = req.body;
@@ -19,8 +18,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Prompt tidak boleh kosong' });
     }
 
-    // Mengambil API Key yang tersimpan aman di Environment Variables Vercel
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    // Mengambil API Key tersembunyi yang Anda simpan di Vercel tadi
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        return res.status(500).json({ error: 'API Key belum terkonfigurasi di Vercel' });
+    }
 
     const systemInstruction = `
         Anda adalah seorang AI Storyboard Director Profesional universal.
@@ -40,7 +42,7 @@ export default async function handler(req, res) {
     `;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -49,12 +51,19 @@ export default async function handler(req, res) {
             })
         });
 
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error dari Google:', errorText);
+            return res.status(response.status).json({ error: 'Google AI menolak permintaan.' });
+        }
+
         const resData = await response.json();
         const rawJsonText = resData.candidates[0].content.parts[0].text;
         const storyboardData = JSON.parse(rawJsonText);
 
         return res.status(200).json(storyboardData);
     } catch (error) {
-        return res.status(500).json({ error: 'Gagal memproses data ke AI Gemini' });
+        console.error('Crash Error:', error);
+        return res.status(500).json({ error: 'Terjadi kegagalan server internal.' });
     }
 }

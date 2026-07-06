@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal AI Storyboard Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+
+    <div class="max-w-4xl mx-auto px-4 py-10">
+        
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-amber-400 mb-2">🎬 AI Storyboard Director</h1>
+            <p class="text-gray-400 text-sm md:text-base">Ketik ide cerita apa saja. AI akan otomatis merancang detail adegannya secara universal.</p>
+        </header>
+
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl mb-8 border border-gray-700">
+            <label for="promptInput" class="block text-sm font-semibold text-gray-300 mb-3">Apa ide cerita atau konsep video Anda?</label>
+            <textarea id="promptInput" rows="4" 
+                class="w-full bg-gray-700 border border-gray-600 rounded-xl p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none transition" 
+                placeholder="Contoh: Bus telolet berjalan dari Jakarta ke Bandung, melewati desa dan kota tanpa manusia, voice asmr..."></textarea>
+            
+            <button id="generateBtn" class="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold py-3.5 px-6 rounded-xl transition duration-200 shadow-lg flex items-center justify-center gap-2 text-lg cursor-pointer">
+                <span>Generate Storyboard</span>
+            </button>
+        </div>
+
+        <div id="loading" class="hidden text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
+            <p class="text-gray-400 font-medium">Gemini AI sedang menyusun struktur adegan...</p>
+        </div>
+
+        <div id="storyboardResult" class="hidden">
+            <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3 flex items-center gap-2">📋 Susunan Adegan Video</h2>
+            
+            <div id="gridContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                </div>
+        </div>
+
+    </div>
+
+    <script>
+        // PENTING: Ganti dengan API Key milik Anda dari Google AI Studio
+        const GEMINI_API_KEY = "MASUKKAN_API_KEY_GEMINI_ANDA_DI_SINI"; 
+
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const userPrompt = document.getElementById('promptInput').value.trim();
+            
+            if (!userPrompt) {
+                alert('Silahkan isi ide cerita terlebih dahulu!');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('storyboardResult');
+            const gridContainer = document.getElementById('gridContainer');
+
+            loading.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            gridContainer.innerHTML = '';
+
+            const systemInstruction = `
+                Anda adalah seorang AI Storyboard Director Profesional universal.
+                Tugas Anda adalah memecah ide cerita pengguna menjadi rancangan storyboard video pendek yang terdiri dari 4 sampai 5 adegan (scene) detail sesuai konteks yang diberikan.
+                
+                Format respon Anda WAJIB hanya berupa JSON array murni tanpa pembuka/penutup kata, tanpa format markdown (\`\`\`json ... \`\`\`).
+                
+                Struktur JSON wajib mengikuti template ini:
+                [
+                  {
+                    "scene": 1,
+                    "durasi": "00:00 - 00:02",
+                    "visual": "Deskripsi visual detail objek, lingkungan, dan suasana",
+                    "camera": "Tipe sudut/gerakan kamera",
+                    "motion": "Detail gerakan objek utama di dalam frame",
+                    "sfx": "Efek suara atau detail audio ASMR/Voice yang terdengar"
+                  }
+                ]
+            `;
+
+            try {
+                // Menembak langsung ke endpoint resmi Gemini 2.5 Flash dari browser
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [
+                            { 
+                                role: 'user', 
+                                parts: [{ text: `${systemInstruction}\n\nIde Cerita Pengguna: ${userPrompt}` }] 
+                            }
+                        ],
+                        generationConfig: {
+                            responseMimeType: "application/json"
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Respon API gagal. Periksa kembali API Key Anda.');
+                }
+
+                const resData = await response.json();
+                const rawJsonText = resData.candidates[0].content.parts[0].text;
+                const storyboardData = JSON.parse(rawJsonText);
+
+                storyboardData.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-lg p-5 flex flex-col gap-3 hover:border-amber-500/50 transition duration-300";
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                            <span class="bg-amber-400 text-gray-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">Scene ${item.scene}</span>
+                            <span class="text-xs text-gray-400 font-medium">⏱️ ${item.durasi}</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-amber-400 uppercase tracking-widest">Visual</p>
+                            <p class="text-sm text-gray-200 mt-1 leading-relaxed">${item.visual}</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-700/50 text-xs">
+                            <div>
+                                <span class="text-gray-400 block font-semibold mb-0.5">📷 Kamera:</span>
+                                <span class="text-gray-300">${item.camera}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-400 block font-semibold mb-0.5">🏃 Gerakan:</span>
+                                <span class="text-gray-300">${item.motion}</span>
+                            </div>
+                        </div>
+                        <div class="text-xs bg-gray-900/60 p-2.5 rounded-xl border border-gray-700/40 mt-1 text-gray-300">
+                            <span class="text-amber-400 font-bold">🎵 Audio/SFX:</span> ${item.sfx}
+                        </div>
+                    `;
+                    gridContainer.appendChild(card);
+                });
+
+                loading.classList.add('hidden');
+                resultDiv.classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                alert('Gagal memproses cerita! Pastikan API Key yang Anda tempel di dalam kode sudah benar.');
+                loading.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

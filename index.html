@@ -123,80 +123,107 @@
             reader.readAsDataURL(file);
         }
 
-        async function generateStoryboard() {
-            const promptText = document.getElementById('promptInput').value.trim();
-            const submitBtn = document.getElementById('submitBtn');
-            const resultContainer = document.getElementById('resultContainer');
-            const resultOutput = document.getElementById('resultOutput');
+      async function generateStoryboard() {
+    const promptText = document.getElementById('promptInput').value.trim();
+    const submitBtn = document.getElementById('submitBtn');
+    const resultContainer = document.getElementById('resultContainer');
+    const resultOutput = document.getElementById('resultOutput');
 
-            if (!promptText) {
-                alert("Silakan isi konsep cerita Anda terlebih dahulu!");
-                return;
-            }
+    if (!promptText) {
+        alert("Silakan isi konsep cerita Anda terlebih dahulu!");
+        return;
+    }
 
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Sutradara AI Sedang Merancang Teks & Menggambar...";
-            resultContainer.classList.add('hidden');
-            resultOutput.innerHTML = ""; 
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Sutradara AI Sedang Merancang Skrip 6 Adegan...";
+    resultContainer.classList.add('hidden');
+    resultOutput.innerHTML = ""; 
 
+    try {
+        // 1. Ambil 6 Skrip teks storyboard dari backend
+        const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt: promptText,
+                images: uploadedImages,
+                video: uploadedVideo
+            })
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) throw new Error(result.error || "Gagal memproses skrip.");
+
+        resultContainer.classList.remove('hidden');
+        
+        // 2. Tampilkan layout 6 adegan dengan animasi loading gambar terlebih dahulu
+        let gridHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+        result.panels.forEach((panel, index) => {
+            gridHTML += `
+                <div class="bg-gray-950 rounded-xl overflow-hidden border border-gray-700 shadow-lg flex flex-col">
+                    <!-- Placeholder loading gambar -->
+                    <div id="img-container-${index}" class="w-full h-56 bg-gray-900 border-b border-gray-800 flex items-center justify-center text-xs text-gray-500 animate-pulse">
+                        🎨 Sedang menggambar panel adegan...
+                    </div>
+                    
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-400 text-gray-950 uppercase">${panel.nomorAdegan}</span>
+                                <span class="text-xs text-amber-400 font-mono font-semibold">${panel.jenisShot}</span>
+                            </div>
+                            <div class="text-xs text-gray-300 leading-relaxed">
+                                <strong class="text-amber-400 block mb-1">Deskripsi Visual:</strong> 
+                                ${panel.deskripsiVisual}
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-gray-800 text-xs">
+                            <strong class="text-amber-400 block mb-1">Audio / Dialog:</strong>
+                            <span class="text-gray-400 italic">"${panel.audio}"</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        gridHTML += `</div>`;
+        resultOutput.innerHTML = gridHTML;
+
+        // 3. Panggil API gambar satu per satu dari browser agar aman dari limit timeout Vercel
+        submitBtn.innerText = "Menggambar panel visual secara bertahap...";
+        
+        for (let i = 0; i < result.panels.length; i++) {
+            const panel = result.panels[i];
+            const fullPrompt = `${panel.promptGambarSpesifik}, in the style of ${result.gayaVisualUmum}, highly detailed storyboard art, cinematic lighting, 8k resolution`;
+            
             try {
-                const response = await fetch('/api/generate', {
+                const imgResponse = await fetch('/api/generate-image', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prompt: promptText,
-                        images: uploadedImages,
-                        video: uploadedVideo
-                    })
+                    body: JSON.stringify({ prompt: fullPrompt })
                 });
-
-                const result = await response.json();
+                const imgResult = await imgResponse.json();
                 
-                if (response.ok && result.data) {
-                    resultContainer.classList.remove('hidden');
-                    
-                    // Membuat struktur layout Grid untuk memadukan teks dan gambar
-                    let gridHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
-                    
-                    result.data.forEach(panel => {
-                        gridHTML += `
-                            <div class="bg-gray-950 rounded-xl overflow-hidden border border-gray-700 shadow-lg flex flex-col">
-                                <!-- Bagian Gambar Nyata yang Dihasilkan -->
-                                <img src="${panel.imageUrl}" class="w-full h-56 object-cover bg-gray-900 border-b border-gray-800" alt="Panel Storyboard">
-                                
-                                <!-- Bagian Teks Detail Informasi Adegan -->
-                                <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
-                                    <div>
-                                        <div class="flex justify-between items-center mb-2">
-                                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-400 text-gray-950 uppercase">${panel.nomorAdegan}</span>
-                                            <span class="text-xs text-amber-400 font-mono font-semibold">${panel.jenisShot}</span>
-                                        </div>
-                                        <div class="text-xs text-gray-300 leading-relaxed">
-                                            <strong class="text-amber-400 block mb-1">Deskripsi Visual:</strong> 
-                                            ${panel.deskripsiVisual}
-                                        </div>
-                                    </div>
-                                    <div class="pt-3 border-t border-gray-800 text-xs">
-                                        <strong class="text-amber-400 block mb-1">Audio / Dialog / Sound Effect:</strong>
-                                        <span class="text-gray-400 italic">"${panel.audio}"</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    gridHTML += `</div>`;
-                    resultOutput.innerHTML = gridHTML;
+                const container = document.getElementById(`img-container-${i}`);
+                if (imgResponse.ok && imgResult.imageUrl) {
+                    // Masukkan gambar asli menggantikan teks loading
+                    container.innerHTML = `<img src="${imgResult.imageUrl}" class="w-full h-full object-cover" alt="Panel Storyboard">`;
+                    container.classList.remove('animate-pulse');
                 } else {
-                    alert("Error: " + (result.error || "Gagal mendapatkan data dari server"));
+                    container.innerHTML = `<div class="text-red-400 text-center px-4">⚠️ Gambar Gagal Dimuat<br><span class="text-[10px] text-gray-600">${imgResult.error || ''}</span></div>`;
                 }
-            } catch (error) {
-                alert("Gagal terhubung ke server: " + error.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Generate Storyboard";
+            } catch (err) {
+                document.getElementById(`img-container-${i}`).innerHTML = `<div class="text-red-400">⚠️ Koneksi terputus</div>`;
             }
         }
+
+    } catch (error) {
+        alert("Error: " + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Generate Storyboard";
+    }
+}
     </script>
 </body>
 </html>

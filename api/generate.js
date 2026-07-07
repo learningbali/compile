@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, Type } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -17,23 +17,23 @@ export default async function handler(req, res) {
     // Model utama untuk analisis skrip
     const textModel = genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash',
-      // Memaksa Gemini mengembalikan format JSON terstruktur yang rapi
+      // Menggunakan definisi skema standar JSON agar tidak bergantung pada objek 'Type' yang bermasalah
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.OBJECT,
+          type: "OBJECT",
           properties: {
-            gayaVisualUmum: { type: Type.STRING },
+            gayaVisualUmum: { type: "STRING" },
             panels: {
-              type: Type.ARRAY,
+              type: "ARRAY",
               items: {
-                type: Type.OBJECT,
+                type: "OBJECT",
                 properties: {
-                  nomorAdegan: { type: Type.STRING },
-                  jenisShot: { type: Type.STRING },
-                  dialogAtauAudio: { type: Type.STRING },
-                  deskripsiCerita: { type: Type.STRING },
-                  promptGambarSpesifik: { type: Type.STRING } // Ini yang akan dikirim ke Imagen
+                  nomorAdegan: { type: "STRING" },
+                  jenisShot: { type: "STRING" },
+                  dialogAtauAudio: { type: "STRING" },
+                  deskripsiCerita: { type: "STRING" },
+                  promptGambarSpesifik: { type: "STRING" }
                 },
                 required: ["nomorAdegan", "jenisShot", "dialogAtauAudio", "deskripsiCerita", "promptGambarSpesifik"],
               },
@@ -44,7 +44,6 @@ export default async function handler(req, res) {
       }
     });
 
-    // 1. Minta Gemini menganalisis referensi & memecah teks jadi prompt JSON
     const systemInstruction = 
       "Anda adalah sutradara profesional. Analisis gambar/video referensi untuk mendeteksi gaya visual, rupa karakter, dan mood latar belakang secara universal.\n" +
       "Pecah cerita pengguna menjadi panel-panel JSON. Di kolom 'promptGambarSpesifik', buatkan prompt bahasa Inggris yang sangat detail untuk AI generator gambar (Imagen 3). " +
@@ -60,17 +59,16 @@ export default async function handler(req, res) {
     // 2. Gunakan Model Imagen Google untuk merender Gambar per Panel secara otomatis
     const imageModel = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-002' });
 
-    // Kita batasi maksimum 4-5 panel di serverless Vercel gratis agar tidak terkena Timeout 10 detik!
-    const activePanels = storyboardData.panels.slice(0, 4); 
+    // Batasi maksimum 3 panel di serverless Vercel gratis agar aman dari Vercel Timeout (10 detik)
+    const activePanels = storyboardData.panels.slice(0, 3); 
 
     for (let panel of activePanels) {
       try {
-        // Gabungkan gaya visual umum ke setiap prompt panel agar gambarnya konsisten
         const fullPrompt = `${panel.promptGambarSpesifik}, in the style of ${storyboardData.gayaVisualUmum}, cinematic composition, high detail storyboard panel`;
         
         const imageResult = await imageModel.generateContent({ prompt: fullPrompt });
         
-        // Imagen mengembalikan data base64 gambar langsung
+        // Ambil data base64 gambar langsung dari Imagen 3
         const base64Image = imageResult.response.generatedImages[0].image.imageBytesBase64;
         panel.imageUrl = `data:image/jpeg;base64,${base64Image}`;
       } catch (imgErr) {
@@ -79,7 +77,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Kembalikan data JSON lengkap beserta link gambar base64 ke front-end
     return res.status(200).json({ data: activePanels });
 
   } catch (error) {

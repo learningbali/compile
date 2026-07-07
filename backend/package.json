@@ -13,7 +13,3 @@
     "express": "^4.19.2"
   }
 }
-
-"dependencies": {
-  "@google/generative-ai": "^0.2.1"
-}

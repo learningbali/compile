@@ -1,69 +1,70 @@
+import { GoogleGenAI } from '@google/generative-ai';
+
 export default async function handler(req, res) {
-    // Pengaturan Header CORS agar bisa diakses browser 
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  // Hanya menerima metode POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+  try {
+    const { prompt, images, video } = req.body;
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
+    // Inisialisasi API Key dari environment variable Vercel Anda
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    
+    // Menggunakan model gemini-2.5-flash karena sangat efisien dalam memproses multimodal (Teks + Gambar + Video)
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const { prompt } = req.body;
-    if (!prompt) {
-        return res.status(400).json({ error: 'Prompt tidak boleh kosong' });
-    }
+    // Instruksi sistem yang memaksa AI bekerja secara Universal tanpa terikat satu topik
+    const systemInstruction = 
+      "Anda adalah seorang Sutradara dan Ahli Storyboard Universal profesional. Anda akan menerima teks ide cerita, " +
+      "beberapa gambar referensi (yang mendefinisikan gaya visual, palet warna, atau rupa karakter), dan satu video referensi " +
+      "(yang mendefinisikan tempo adegan, gaya pergerakan kamera, atau jenis transisi shot).\n\n" +
+      "Tugas Anda:\n" +
+      "1. Analisis gaya visual/artistik dari gambar yang diunggah.\n" +
+      "2. Analisis dinamika sinematografi/gerakan dari video yang diunggah.\n" +
+      "3. Bedah teks konsep cerita yang diberikan menjadi sebuah rancangan storyboard terstruktur per adegan (panel-panel shot).\n" +
+      "4. Setiap panel wajib berisi: Nama Adegan/Shot, Jenis Kamera (misal: Close-up, Wide Shot, Panning), Deskripsi Visual Detail " +
+      "(gabungkan konsep cerita pengguna dengan gaya visual dari gambar dan gerakan dari video secara presisi), dan Audio/Dialog.\n" +
+      "5. Patuhi gaya referensi tersebut secara universal, baik itu untuk tema fiksi ilmiah, anime, live-action korporat, iklan, maupun fantasi.";
 
-    // Mengambil API Key tersembunyi yang Anda simpan di Vercel tadi
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        return res.status(500).json({ error: 'API Key belum terkonfigurasi di Vercel' });
-    }
+    // Susun isi konten yang akan dikirim
+    const contents = [];
 
-    const systemInstruction = `
-        Anda adalah seorang AI Storyboard Director Profesional universal.
-        Tugas Anda adalah memecah ide cerita pengguna menjadi rancangan storyboard video pendek yang terdiri dari 4 sampai 5 adegan (scene) detail.
-        Format respon Anda WAJIB hanya berupa JSON array murni tanpa pembuka/penutup kata, tanpa format markdown (\`\`\`json ... \`\`\`).
-        Struktur JSON wajib mengikuti template ini:
-        [
-          {
-            "scene": 1,
-            "durasi": "00:00 - 00:02",
-            "visual": "Deskripsi visual detail objek, lingkungan, dan suasana",
-            "camera": "Tipe sudut/gerakan kamera",
-            "motion": "Detail gerakan objek utama di dalam frame",
-            "sfx": "Efek suara atau detail audio ASMR/Voice yang terdengar"
+    // 1. Masukkan Instruksi Kerja dan Teks Cerita Pengguna
+    contents.push(`${systemInstruction}\n\nIde Cerita Pengguna:\n${prompt}`);
+
+    // 2. Jika ada Gambar referensi, masukkan ke array konten
+    if (images && images.length > 0) {
+      images.forEach(img => {
+        contents.push({
+          inlineData: {
+            data: img.base64,
+            mimeType: img.mimeType
           }
-        ]
-    `;
-
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: `${systemInstruction}\n\nIde Cerita Pengguna: ${prompt}` }] }],
-                generationConfig: { responseMimeType: "application/json" }
-            })
         });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error dari Google:', errorText);
-            return res.status(response.status).json({ error: 'Google AI menolak permintaan.' });
-        }
-
-        const resData = await response.json();
-        const rawJsonText = resData.candidates[0].content.parts[0].text;
-        const storyboardData = JSON.parse(rawJsonText);
-
-        return res.status(200).json(storyboardData);
-    } catch (error) {
-        console.error('Crash Error:', error);
-        return res.status(500).json({ error: 'Terjadi kegagalan server internal.' });
+      });
     }
+
+    // 3. Jika ada Video referensi, masukkan ke array konten
+    if (video) {
+      contents.push({
+        inlineData: {
+          data: video.base64,
+          mimeType: video.mimeType
+        }
+      });
+    }
+
+    // Eksekusi ke Gemini API
+    const result = await model.generateContent(contents);
+    const responseText = result.response.text();
+
+    // Kirimkan balik hasilnya ke front-end
+    return res.status(200).json({ data: responseText });
+
+  } catch (error) {
+    console.error("Gemini Processing Error:", error);
+    return res.status(500).json({ error: 'Gagal memproses storyboard: ' + error.message });
+  }
 }

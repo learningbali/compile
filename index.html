@@ -11,7 +11,7 @@
     <div class="max-w-4xl mx-auto px-4 py-10">
         <header class="text-center mb-10">
             <h1 class="text-4xl font-extrabold text-amber-400 mb-2">🎬 AI Storyboard Director</h1>
-            <p class="text-gray-400 text-sm md:text-base">Ketik ide cerita apa saja. AI akan otomatis merancang detail adegannya secara universal.</p>
+            <p class="text-gray-400 text-sm md:text-base">Ketik ide cerita apa saja. AI akan otomatis merancang teks adegan beserta gambarnya secara universal.</p>
         </header>
 
         <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl mb-8 border border-gray-700 space-y-6">
@@ -20,7 +20,7 @@
                 <label for="promptInput" class="block text-sm font-semibold text-gray-300 mb-3">Apa ide cerita atau konsep video Anda?</label>
                 <textarea id="promptInput" rows="4" 
                     class="w-full bg-gray-700 border border-gray-600 rounded-xl p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="Anda adalah seorang Sutradara dan Ahli Storyboard Universal. Anda akan menerima teks cerita, maksimal 10 gambar referensi (gaya visual/karakter), dan 1 video referensi (gerakan/kamera)"></textarea>
+                    placeholder="Contoh: Petualangan robot besi berkarat di tengah kota masa depan bernuansa cyberpunk..."></textarea>
             </div>
 
             <!-- Input Referensi Gambar & Video -->
@@ -49,10 +49,10 @@
             </button>
         </div>
 
-        <!-- Hasil Output -->
+        <!-- Hasil Output Grid (Menampilkan Teks + Gambar) -->
         <div id="resultContainer" class="hidden bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl">
-            <h2 class="text-xl font-bold text-amber-400 mb-4 border-b border-gray-700 pb-2">📋 Hasil Analisis & Storyboard</h2>
-            <div id="resultOutput" class="whitespace-pre-wrap text-gray-300 text-sm leading-relaxed"></div>
+            <h2 class="text-xl font-bold text-amber-400 mb-6 border-b border-gray-700 pb-3">📋 Susunan Papan Cerita Visual (Text & Gambar)</h2>
+            <div id="resultOutput"></div>
         </div>
     </div>
 
@@ -60,7 +60,6 @@
         let uploadedImages = [];
         let uploadedVideo = null;
 
-        // Proses kompresi gambar agar tidak merusak limit payload Vercel
         function handleImages(input) {
             const files = Array.from(input.files).slice(0, 10);
             uploadedImages = [];
@@ -99,7 +98,6 @@
             });
         }
 
-        // Proses video menjadi base64 (pastikan durasi sangat singkat/file kecil)
         function handleVideo(input) {
             const file = input.files[0];
             const previewContainer = document.getElementById('videoPreview');
@@ -108,7 +106,6 @@
 
             if (!file) return;
 
-            // Batasi ukuran video di frontend demi stabilitas serverless Vercel (contoh maks 15MB)
             if (file.size > 15 * 1024 * 1024) {
                 alert("Ukuran video terlalu besar. Silakan gunakan klip video referensi di bawah 15MB.");
                 input.value = "";
@@ -127,74 +124,79 @@
         }
 
         async function generateStoryboard() {
-    const promptText = document.getElementById('promptInput').value.trim();
-    const submitBtn = document.getElementById('submitBtn');
-    const resultContainer = document.getElementById('resultContainer');
-    const resultOutput = document.getElementById('resultOutput');
+            const promptText = document.getElementById('promptInput').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+            const resultContainer = document.getElementById('resultContainer');
+            const resultOutput = document.getElementById('resultOutput');
 
-    if (!promptText) {
-        alert("Silakan isi konsep cerita Anda terlebih dahulu!");
-        return;
-    }
+            if (!promptText) {
+                alert("Silakan isi konsep cerita Anda terlebih dahulu!");
+                return;
+            }
 
-    submitBtn.disabled = true;
-    submitBtn.innerText = "Menggambar Panel Storyboard dengan AI...";
-    resultContainer.classList.add('hidden');
-    resultOutput.innerHTML = ""; // Bersihkan output lama
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Sutradara AI Sedang Merancang Teks & Menggambar...";
+            resultContainer.classList.add('hidden');
+            resultOutput.innerHTML = ""; 
 
-    try {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                prompt: promptText,
-                images: uploadedImages,
-                video: uploadedVideo
-            })
-        });
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: promptText,
+                        images: uploadedImages,
+                        video: uploadedVideo
+                    })
+                });
 
-        const result = await response.json();
-        
-        if (response.ok) {
-            resultContainer.classList.remove('hidden');
-            
-            // Membuat tampilan Grid layout untuk hasil gambar dan teks
-            let gridHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
-            
-            result.data.forEach(panel => {
-                gridHTML += `
-                    <div class="bg-gray-950 rounded-xl overflow-hidden border border-gray-700 shadow-lg flex flex-col">
-                        <!-- Render Gambar Nyata dari Gemini Imagen -->
-                        <img src="${panel.imageUrl}" class="w-full h-52 object-cover bg-gray-900 border-b border-gray-800" alt="Panel Storyboard">
-                        
-                        <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
-                            <div>
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-400 text-gray-950 uppercase">${panel.nomorAdegan}</span>
-                                    <span class="text-xs text-amber-400 font-mono font-semibold">${panel.jenisShot}</span>
+                const result = await response.json();
+                
+                if (response.ok && result.data) {
+                    resultContainer.classList.remove('hidden');
+                    
+                    // Membuat struktur layout Grid untuk memadukan teks dan gambar
+                    let gridHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+                    
+                    result.data.forEach(panel => {
+                        gridHTML += `
+                            <div class="bg-gray-950 rounded-xl overflow-hidden border border-gray-700 shadow-lg flex flex-col">
+                                <!-- Bagian Gambar Nyata yang Dihasilkan -->
+                                <img src="${panel.imageUrl}" class="w-full h-56 object-cover bg-gray-900 border-b border-gray-800" alt="Panel Storyboard">
+                                
+                                <!-- Bagian Teks Detail Informasi Adegan -->
+                                <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                                    <div>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-400 text-gray-950 uppercase">${panel.nomorAdegan}</span>
+                                            <span class="text-xs text-amber-400 font-mono font-semibold">${panel.jenisShot}</span>
+                                        </div>
+                                        <div class="text-xs text-gray-300 leading-relaxed">
+                                            <strong class="text-amber-400 block mb-1">Deskripsi Visual:</strong> 
+                                            ${panel.deskripsiVisual}
+                                        </div>
+                                    </div>
+                                    <div class="pt-3 border-t border-gray-800 text-xs">
+                                        <strong class="text-amber-400 block mb-1">Audio / Dialog / Sound Effect:</strong>
+                                        <span class="text-gray-400 italic">"${panel.audio}"</span>
+                                    </div>
                                 </div>
-                                <p class="text-xs text-gray-400 leading-relaxed"><strong class="text-gray-200">Visual:</strong> ${panel.deskripsiCerita}</p>
                             </div>
-                            <div class="pt-2 border-t border-gray-800">
-                                <p class="text-xs text-amber-200 italic"><strong class="text-gray-200 not-italic">Audio / Dialog:</strong> "${panel.dialogAtauAudio}"</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            gridHTML += `</div>`;
-            resultOutput.innerHTML = gridHTML;
-        } else {
-            alert("Error: " + result.error);
+                        `;
+                    });
+                    
+                    gridHTML += `</div>`;
+                    resultOutput.innerHTML = gridHTML;
+                } else {
+                    alert("Error: " + (result.error || "Gagal mendapatkan data dari server"));
+                }
+            } catch (error) {
+                alert("Gagal terhubung ke server: " + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Generate Storyboard";
+            }
         }
-    } catch (error) {
-        alert("Gagal terhubung ke server: " + error.message);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = "Generate Storyboard";
-    }
-}
     </script>
 </body>
 </html>

@@ -1,7 +1,6 @@
-import { GoogleGenAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(req, res) {
-  // Hanya menerima metode POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -9,32 +8,33 @@ export default async function handler(req, res) {
   try {
     const { prompt, images, video } = req.body;
 
-    // Inisialisasi API Key dari environment variable Vercel Anda
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
-    // Menggunakan model gemini-2.5-flash karena sangat efisien dalam memproses multimodal (Teks + Gambar + Video)
-    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // 1. Pastikan API Key tersedia
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY belum dikonfigurasi di Environment Variables Vercel.' });
+    }
 
-    // Instruksi sistem yang memaksa AI bekerja secara Universal tanpa terikat satu topik
+    // 2. Inisialisasi SDK Gemini yang benar untuk versi @google/generative-ai
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    
+    // Gunakan model gemini-2.5-flash untuk kecepatan & fitur multimodal yang stabil
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
     const systemInstruction = 
       "Anda adalah seorang Sutradara dan Ahli Storyboard Universal profesional. Anda akan menerima teks ide cerita, " +
-      "beberapa gambar referensi (yang mendefinisikan gaya visual, palet warna, atau rupa karakter), dan satu video referensi " +
-      "(yang mendefinisikan tempo adegan, gaya pergerakan kamera, atau jenis transisi shot).\n\n" +
+      "beberapa gambar referensi (gaya visual/karakter), dan satu video referensi (gerakan/kamera).\n\n" +
       "Tugas Anda:\n" +
-      "1. Analisis gaya visual/artistik dari gambar yang diunggah.\n" +
-      "2. Analisis dinamika sinematografi/gerakan dari video yang diunggah.\n" +
-      "3. Bedah teks konsep cerita yang diberikan menjadi sebuah rancangan storyboard terstruktur per adegan (panel-panel shot).\n" +
-      "4. Setiap panel wajib berisi: Nama Adegan/Shot, Jenis Kamera (misal: Close-up, Wide Shot, Panning), Deskripsi Visual Detail " +
-      "(gabungkan konsep cerita pengguna dengan gaya visual dari gambar dan gerakan dari video secara presisi), dan Audio/Dialog.\n" +
-      "5. Patuhi gaya referensi tersebut secara universal, baik itu untuk tema fiksi ilmiah, anime, live-action korporat, iklan, maupun fantasi.";
+      "1. Analisis gaya visual/artistik dari gambar.\n" +
+      "2. Analisis dinamika sinematografi dari video jika ada.\n" +
+      "3. Bedah teks konsep cerita menjadi rancangan storyboard per adegan (panel-panel shot).\n" +
+      "4. Setiap panel wajib berisi: Nama Adegan/Shot, Jenis Kamera, Deskripsi Visual Detail (padukan cerita dengan gaya gambar & gerakan video), dan Audio/Dialog.\n" +
+      "5. Patuhi gaya tersebut secara universal, baik itu untuk tema fiksi ilmiah, anime, live-action, iklan, maupun fantasi.";
 
-    // Susun isi konten yang akan dikirim
     const contents = [];
 
-    // 1. Masukkan Instruksi Kerja dan Teks Cerita Pengguna
+    // Masukkan instruksi dasar dan prompt teks dari user
     contents.push(`${systemInstruction}\n\nIde Cerita Pengguna:\n${prompt}`);
 
-    // 2. Jika ada Gambar referensi, masukkan ke array konten
+    // Masukkan Gambar Referensi
     if (images && images.length > 0) {
       images.forEach(img => {
         contents.push({
@@ -46,8 +46,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3. Jika ada Video referensi, masukkan ke array konten
-    if (video) {
+    // Masukkan Video Referensi
+    if (video && video.base64) {
       contents.push({
         inlineData: {
           data: video.base64,
@@ -56,15 +56,21 @@ export default async function handler(req, res) {
       });
     }
 
-    // Eksekusi ke Gemini API
+    // Jalankan request ke AI
     const result = await model.generateContent(contents);
+    
+    // Pastikan response ada dan ambil teksnya
+    if (!result || !result.response) {
+      throw new Error("Tidak ada respons yang diterima dari Gemini API.");
+    }
+    
     const responseText = result.response.text();
 
-    // Kirimkan balik hasilnya ke front-end
     return res.status(200).json({ data: responseText });
 
   } catch (error) {
-    console.error("Gemini Processing Error:", error);
-    return res.status(500).json({ error: 'Gagal memproses storyboard: ' + error.message });
+    console.error("Gemini Error:", error);
+    // Mengembalikan error dalam format JSON asli agar ditangkap baik oleh frontend
+    return res.status(500).json({ error: error.message || 'Terjadi kesalahan pada internal server.' });
   }
 }
